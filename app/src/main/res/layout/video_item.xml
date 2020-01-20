@@ -11,6 +11,7 @@
         android:id="@+id/video_item_thumbnail"
         android:layout_width="match_parent"
         android:layout_height="250dp"
+        android:layout_marginTop="8dp"
         android:adjustViewBounds="true"
         android:scaleType="centerCrop"
         app:layout_constraintEnd_toEndOf="parent"
@@ -20,6 +21,7 @@
         tools:srcCompat="@tools:sample/backgrounds/scenic" />
 
     <FrameLayout
+        android:id="@+id/video_item_overlay"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="@color/black_semi_transparent"
@@ -29,15 +31,37 @@
         app:layout_constraintTop_toTopOf="@+id/video_item_thumbnail" />
 
     <ImageView
+        android:id="@+id/video_item_play_ic"
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:tint="@android:color/white"
         app:layout_constraintBottom_toBottomOf="@+id/video_item_thumbnail"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/video_item_thumbnail"
         app:layout_constraintHorizontal_bias="0.498"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/video_item_thumbnail"
         app:layout_constraintTop_toTopOf="@+id/video_item_thumbnail"
         app:srcCompat="@drawable/exo_icon_circular_play" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/video_item_thumbnail_group"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:constraint_referenced_ids="video_item_thumbnail,video_item_overlay,video_item_play_ic" />
+
+    <com.google.android.exoplayer2.ui.PlayerView
+        android:id="@+id/video_item_player_view"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:visibility="invisible"
+        android:layout_marginTop="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/video_item_title"
@@ -45,7 +69,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginLeft="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="4dp"
         android:layout_marginBottom="8dp"
         android:textColor="@android:color/black"
         android:textSize="20sp"

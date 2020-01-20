@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.github.hachimori.hachimori_01162020.R
 import com.github.hachimori.hachimori_01162020.network.HachimoriService
@@ -67,6 +66,5 @@ class MainFragment : Fragment() {
             viewModel.onClickVideo(index)
         },
             viewModel.videoList.value?.toMutableList() ?: mutableListOf())
-        main_video_list.addItemDecoration(DividerItemDecoration(context, LinearLayoutManager.VERTICAL))
     }
 }
