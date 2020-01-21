@@ -40,14 +40,6 @@ class MainFragment : Fragment() {
             }
             (main_video_list.adapter as VideoListAdapter).updateVideoList(response)
         })
-
-        viewModel.playVideoId.observe(this, Observer { videoId ->
-            (main_video_list.adapter as VideoListAdapter).playVideo(videoId)
-        })
-
-        viewModel.pauseVideoId.observe(this, Observer { videoId ->
-            (main_video_list.adapter as VideoListAdapter).pauseVideo(videoId)
-        })
     }
 
     override fun onCreateView(
@@ -61,10 +53,6 @@ class MainFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
 
         main_video_list.layoutManager = LinearLayoutManager(context)
-        main_video_list.adapter = VideoListAdapter({ index, video ->
-            Timber.i("Clicked video index: ${index},  video_url: ${video.video_url}")
-            viewModel.onClickVideo(index)
-        },
-            viewModel.videoList.value?.toMutableList() ?: mutableListOf())
+        main_video_list.adapter = VideoListAdapter(viewModel.videoList.value?.toMutableList() ?: mutableListOf())
     }
 }

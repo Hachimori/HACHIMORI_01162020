@@ -19,8 +19,15 @@ data class Video(
 }
 
 data class AudioUrls(
-    val en: String?,
+    val en: String,
     val de: String?,
     val cn: String?,
     val zh: String?
-)
+) {
+    fun getAudioUrlByLanguage(language: String): String {
+        if (language == "de" && de != null) return de
+        if (language == "cn" && cn != null) return cn
+        if (language == "zh" && zh != null) return zh
+        return en
+    }
+}

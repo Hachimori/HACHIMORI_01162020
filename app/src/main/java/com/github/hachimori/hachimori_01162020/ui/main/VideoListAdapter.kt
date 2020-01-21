@@ -8,97 +8,102 @@ import androidx.recyclerview.widget.RecyclerView
 import com.github.hachimori.hachimori_01162020.R
 import com.github.hachimori.hachimori_01162020.model.Video
 import com.github.hachimori.hachimori_01162020.util.loadImage
+import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.source.MergingMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
-import com.google.android.exoplayer2.ui.PlayerView
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import kotlinx.android.synthetic.main.video_item.view.*
+import java.util.*
 
-class VideoListAdapter(private val onClickListener: (Int, Video) -> Unit,
-                       private val videoList: MutableList<Video>) : RecyclerView.Adapter<VideoViewHolder>() {
+class VideoListAdapter(private val videoList: MutableList<Video>) : RecyclerView.Adapter<VideoViewHolder>() {
 
-    private val isPlaying: MutableList<Boolean> = mutableListOf()
     private val playerList: MutableList<SimpleExoPlayer?> = mutableListOf()
-    private val isPrepared: MutableList<Boolean> = mutableListOf()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoViewHolder {
         val inflater: LayoutInflater = LayoutInflater.from(parent.context)
         val view: View = inflater.inflate(R.layout.video_item, parent, false)
-        return VideoViewHolder(onClickListener, view)
+        return VideoViewHolder({ videoId, video ->
+            playerList.forEachIndexed { idx, player ->
+                if (player?.playWhenReady == true) {
+                    pauseVideo(idx)
+                }
+            }
+            playVideo(videoId)
+        }, view)
     }
 
     override fun getItemCount() = videoList.size
 
     override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
         if (playerList[position] == null) {
-            playerList[position] = SimpleExoPlayer.Builder(holder.itemView.context).build()
+            playerList[position] = SimpleExoPlayer
+                .Builder(holder.itemView.context)
+                .build()
+
+            playerList[position]!!.addListener(object: Player.EventListener {
+                override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+                    if ((!playWhenReady && playbackState == Player.STATE_READY) || playbackState == Player.STATE_ENDED) {
+                        pauseVideo(position)
+                    }
+                }
+
+            })
         }
-        holder.bind(videoList[position], playerList[position]!!, isPlaying[position], isPrepared[position]) { isPrepared[position] = true }
+        holder.bind(videoList[position], playerList[position]!!)
     }
 
     fun updateVideoList(newVideoList: List<Video>) {
         videoList.clear()
         videoList.addAll(newVideoList)
-        isPlaying.clear()
         playerList.clear()
-        isPrepared.clear()
         repeat(newVideoList.size) {
-            isPlaying.add(false)
             playerList.add(null)
-            isPrepared.add(false)
         }
 
         notifyDataSetChanged()
     }
 
     fun playVideo(videoId: Int) {
-        isPlaying[videoId] = true
+        playerList[videoId]?.playWhenReady = true
         notifyItemChanged(videoId)
     }
 
     fun pauseVideo(videoId: Int) {
-        isPlaying[videoId] = false
+        playerList[videoId]?.playWhenReady = false
         notifyItemChanged(videoId)
     }
 }
 
-class VideoViewHolder(private val onClickListener: (Int, Video) -> Unit,
+class VideoViewHolder(private val onThumbnailCliked: (Int, Video) -> Unit,
                        itemView: View) : RecyclerView.ViewHolder(itemView) {
 
 
-    fun bind(video: Video, player: SimpleExoPlayer, isPlaying: Boolean, isPrepared: Boolean, onDidPrepare: () -> Unit) {
-        itemView.video_item_root.setOnClickListener {
-            onClickListener(adapterPosition, video)
+    fun bind(video: Video, player: SimpleExoPlayer) {
+        itemView.video_item_thumbnail.setOnClickListener {
+            onThumbnailCliked(adapterPosition, video)
         }
         itemView.video_item_thumbnail.loadImage(video.getThumbnailUrl())
         itemView.video_item_title.text = video.title
+        itemView.video_item_player_view.player = player
 
-        PlayerView.switchTargetView(player, null, itemView.video_item_player_view)
+        if (player.playWhenReady) {
+            if (player.playbackState == Player.STATE_IDLE) {
+                val audioUrl = video.audio_urls.getAudioUrlByLanguage(Locale.getDefault().language)
+                val dataSourceFactory = DefaultHttpDataSourceFactory(Util.getUserAgent(itemView.context, itemView.context.packageName))
+                val videoSource = ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(
+                    Uri.parse(video.video_url))
+                val audioSource = ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(audioUrl))
 
-        if (isPlaying) {
-            val dataSourceFactory = DefaultDataSourceFactory(itemView.context, Util.getUserAgent(itemView.context, itemView.context.packageName))
-            val videoSource = ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(video.video_url))
-            val audioSource = ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(video.audio_urls.en))
-
-            if (!isPrepared) {
-                if (!(player.isLoading || player.isPlaying)) {
-                    player.prepare(MergingMediaSource(videoSource, audioSource))
-                    onDidPrepare()
-                }
+                player.prepare(MergingMediaSource(videoSource, audioSource))
             }
-
-            player.playWhenReady = true
 
             itemView.video_item_thumbnail_group.visibility = View.INVISIBLE
             itemView.video_item_player_view.visibility = View.VISIBLE
         } else {
-            if (isPrepared) {
-                player.playWhenReady = false
-            }
             itemView.video_item_thumbnail_group.visibility = View.VISIBLE
             itemView.video_item_player_view.visibility = View.INVISIBLE
-         }
+        }
     }
 }

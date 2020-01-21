@@ -21,14 +21,6 @@ class MainViewModel(private val repository: HachimoriRepository) : ViewModel() {
     private val _videoList = MutableLiveData<List<Video>>()
     val videoList : LiveData<List<Video>> = _videoList
 
-    private var playingVideoId = -1
-
-    private val _playVideoId = MutableLiveData<Int>()
-    val playVideoId : LiveData<Int> = _playVideoId
-
-    private val _pauseVideoId = MutableLiveData<Int>()
-    val pauseVideoId : LiveData<Int> = _pauseVideoId
-
     fun getVideoList() {
         val ret: MutableList<Video> = mutableListOf()
 
@@ -46,17 +38,6 @@ class MainViewModel(private val repository: HachimoriRepository) : ViewModel() {
 
             videoListHolder = ret
             _videoList.value = ret
-        }
-    }
-
-    fun onClickVideo(index: Int) {
-        if (playingVideoId == index) {
-            _pauseVideoId.value = index
-            playingVideoId = -1
-        } else {
-            if (playingVideoId != -1) _pauseVideoId.value = playingVideoId
-            _playVideoId.value = index
-            playingVideoId = index
         }
     }
 
