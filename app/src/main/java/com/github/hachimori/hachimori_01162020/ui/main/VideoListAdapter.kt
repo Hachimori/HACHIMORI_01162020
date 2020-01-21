@@ -15,6 +15,7 @@ import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import kotlinx.android.synthetic.main.video_item.view.*
+import timber.log.Timber
 import java.util.*
 
 class VideoListAdapter(private val videoList: MutableList<Video>) : RecyclerView.Adapter<VideoViewHolder>() {
@@ -27,9 +28,11 @@ class VideoListAdapter(private val videoList: MutableList<Video>) : RecyclerView
         return VideoViewHolder({ videoId, video ->
             playerList.forEachIndexed { idx, player ->
                 if (player?.playWhenReady == true) {
+                    Timber.i("Pauses video (another video is clicked): ${idx}, ${videoList[idx].getThumbnailUrl()}")
                     pauseVideo(idx)
                 }
             }
+            Timber.i("Plays video: ${videoId},  ${video.getThumbnailUrl()}")
             playVideo(videoId)
         }, view)
     }
@@ -45,10 +48,13 @@ class VideoListAdapter(private val videoList: MutableList<Video>) : RecyclerView
             playerList[position]!!.addListener(object: Player.EventListener {
                 override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
                     if ((!playWhenReady && playbackState == Player.STATE_READY) || playbackState == Player.STATE_ENDED) {
+                        Timber.i("Pauses video (pause button is clicked / video finished): ${position}, ${videoList[position].getThumbnailUrl()}")
+                        if (playbackState == Player.STATE_ENDED) {
+                            playerList[position]?.seekTo(0)
+                        }
                         pauseVideo(position)
                     }
                 }
-
             })
         }
         holder.bind(videoList[position], playerList[position]!!)
@@ -76,13 +82,13 @@ class VideoListAdapter(private val videoList: MutableList<Video>) : RecyclerView
     }
 }
 
-class VideoViewHolder(private val onThumbnailCliked: (Int, Video) -> Unit,
-                       itemView: View) : RecyclerView.ViewHolder(itemView) {
+class VideoViewHolder(private val onThumbnailClicked: (Int, Video) -> Unit,
+                      itemView: View) : RecyclerView.ViewHolder(itemView) {
 
 
     fun bind(video: Video, player: SimpleExoPlayer) {
         itemView.video_item_thumbnail.setOnClickListener {
-            onThumbnailCliked(adapterPosition, video)
+            onThumbnailClicked(adapterPosition, video)
         }
         itemView.video_item_thumbnail.loadImage(video.getThumbnailUrl())
         itemView.video_item_title.text = video.title
