@@ -1,12 +1,16 @@
 package com.github.hachimori.hachimori_01162020.ui.main
 
+import android.content.Intent
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.github.hachimori.hachimori_01162020.R
 import com.github.hachimori.hachimori_01162020.model.Video
+import com.github.hachimori.hachimori_01162020.ui.fullscreen_video.FullScreenVideoActivity
+import com.github.hachimori.hachimori_01162020.util.Constants
 import com.github.hachimori.hachimori_01162020.util.loadImage
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
@@ -71,12 +75,12 @@ class VideoListAdapter(private val videoList: MutableList<Video>) : RecyclerView
         notifyDataSetChanged()
     }
 
-    fun playVideo(videoId: Int) {
+    private fun playVideo(videoId: Int) {
         playerList[videoId]?.playWhenReady = true
         notifyItemChanged(videoId)
     }
 
-    fun pauseVideo(videoId: Int) {
+    private fun pauseVideo(videoId: Int) {
         playerList[videoId]?.playWhenReady = false
         notifyItemChanged(videoId)
     }
@@ -89,6 +93,13 @@ class VideoViewHolder(private val onThumbnailClicked: (Int, Video) -> Unit,
     fun bind(video: Video, player: SimpleExoPlayer) {
         itemView.video_item_thumbnail.setOnClickListener {
             onThumbnailClicked(adapterPosition, video)
+        }
+        itemView.video_item_fullscreen_ic.setOnClickListener {
+            player.playWhenReady = false
+            val intent = Intent(itemView.context, FullScreenVideoActivity::class.java).apply {
+                putExtra(Constants.EXTRA_VIDEO, video)
+            }
+            startActivity(itemView.context, intent, null)
         }
         itemView.video_item_thumbnail.loadImage(video.getThumbnailUrl())
         itemView.video_item_title.text = video.title
@@ -106,10 +117,10 @@ class VideoViewHolder(private val onThumbnailClicked: (Int, Video) -> Unit,
             }
 
             itemView.video_item_thumbnail_group.visibility = View.INVISIBLE
-            itemView.video_item_player_view.visibility = View.VISIBLE
+            itemView.video_item_player_group.visibility = View.VISIBLE
         } else {
             itemView.video_item_thumbnail_group.visibility = View.VISIBLE
-            itemView.video_item_player_view.visibility = View.INVISIBLE
+            itemView.video_item_player_group.visibility = View.INVISIBLE
         }
     }
 }
